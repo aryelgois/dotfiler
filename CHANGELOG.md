@@ -8,5 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Implementation in shell script
+
 
 [unreleased]: https://github.com/aryelgois/dotfiler/compare/initial-commit...develop

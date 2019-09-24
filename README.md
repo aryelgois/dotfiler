@@ -31,6 +31,38 @@ If there are merge conflicts though,
 you will need to solve them.
 
 
+## Using
+
+Initialize a new repository with `dotfiler init`
+or clone an existing one,
+then make sure your `$HOME` has a hard link
+at the mount point
+with `dotfiler mount`.
+
+Enter the repo directory
+and use `dotfiler add` to add your dotfiles
+to the index.
+
+And don't forget to `git commit`.
+
+
+## Commands
+
+You can get a summary
+about the commands
+with `--help`.
+
+### dotfiler init
+
+### dotfiler add
+
+### dotfiler rm
+
+### dotfiler mount
+
+### dotfiler umount
+
+
 ## [Changelog]
 
 See the [CHANGELOG.md][changelog].
