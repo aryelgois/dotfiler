@@ -31,6 +31,24 @@ If there are merge conflicts though,
 you will need to solve them.
 
 
+## Installing
+
+Simply clone the repository and run `make install`.
+
+    git clone https://github.com/aryelgois/dotfiler.git && cd dotfiler
+
+Note that
+it will need root privileges
+to install system-wide.
+You may install on your user directory
+with `make prefix=~/.local install`,
+just make sure that
+`$HOME/.local/bin` is in your `$PATH`.
+
+If you have [help2man] installed,
+a man page will be generated for you.
+
+
 ## Using
 
 Initialize a new repository with `dotfiler init`
@@ -75,3 +93,5 @@ See the [LICENSE].
 
 [changelog]: CHANGELOG.md
 [license]: LICENSE
+
+[help2man]: https://www.gnu.org/software/help2man
