@@ -72,6 +72,21 @@ with `--help`.
 
 ### dotfiler init
 
+Prepares everything for you,
+from a brand new git repository,
+with a basic `README` and `.gitignore`,
+to already mounting your `$HOME`,
+if you wish.
+
+By default,
+Dotfiler creates a `home` directory,
+but you can pass a different `DIR` to use,
+which doesn't even need to be at the repository root.
+You may call this command
+with different arguments
+to organize your dotfiles
+in multiple directories.
+
 ### dotfiler add
 
 ### dotfiler rm
