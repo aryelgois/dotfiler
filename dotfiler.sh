@@ -110,6 +110,13 @@ starts_with () {
     return 1
 }
 
+# Checks if effective user is root.
+is_root () {
+    if [ "$(id -u)" != "0" ]; then
+        return 1
+    fi
+}
+
 
 # Commands
 # ========
@@ -273,8 +280,124 @@ dotfiler_rm () {
 }
 
 # Mounts $HOME inside the repository.
+#
+# The first positional argument is the mount point directory. If it is not
+# provided, $DEFAULT_DIR is used. The next argument is the device being
+# mounted, which defaults to $HOME.
+#
+# It requires root privileges, but a FUSE filesystem is supported as well.
+# In this case, the mounted filesystem will be visible only to the user that
+# called this command, unless it was root (using sudo) though it would be
+# pointless and you should just mount as usual.
+#
+# OPTIONS:
+#   -f, --fuse   Use a FUSE filesystem with bindfs(1).
+#   -t, --fstab  Add an entry to the system's fstab.
 dotfiler_mount () {
-    :
+    use_fuse=0
+    update_fstab=0
+    dir=$DEFAULT_DIR
+    device=$HOME
+
+    # Read arguments.
+    read_flags=1
+    pos=0
+    while [ $# -gt 0 ]; do
+        # Read flags.
+        if [ "$read_flags" -eq 1 ]; then
+            case $1 in
+            -f|--fuse)
+                use_fuse=1
+                ;;
+            -t|--fstab)
+                update_fstab=1
+                ;;
+            -*)
+                # Read grouped flags.
+                while read -r flag; do
+                    case $flag in
+                    f)
+                        use_fuse=1
+                        ;;
+                    t)
+                        update_fstab=1
+                        ;;
+                    *)
+                        stderr "Invalid flag \`$flag'."
+                        stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+                        exit 1
+                        ;;
+                    esac
+                done <<EOF
+$(echo "${1#-}" | fold -w 1)
+EOF
+                ;;
+            *)
+                read_flags=0
+                continue
+                ;;
+            esac
+
+            shift 1
+            continue
+        fi
+        pos=$(( pos + 1 ))
+
+        # Read positional arguments.
+        if [ "$pos" -eq 1 ]; then
+            if [ -n "$1" ]; then
+                dir=$1
+            else
+                stderr "DIR must not be empty."
+                stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+                exit 1
+            fi
+        elif [ "$pos" -eq 2 ]; then
+            if [ -n "$1" ]; then
+                device=$1
+            else
+                stderr "DEVICE must not be empty."
+                stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+                exit 1
+            fi
+        else
+            stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+            exit 1
+        fi
+
+        shift 1
+    done
+
+    # Mount $device into $dir.
+    if mountpoint -q "$dir"; then
+        stderr "There is a mount point at \`$dir'."
+        exit 1
+    elif [ "$use_fuse" -ne 0 ]; then
+        echo "Mounting into \`$dir' with FUSE filesystem. . ."
+        bindfs -o nonempty,"$(is_root || echo no-allow-other)" "$device" "$dir"
+    else
+        echo "Mounting into \`$dir'. . ."
+        mount --bind "$device" "$dir"
+    fi
+
+    # Update fstab.
+    if [ "$update_fstab" -ne 0 ]; then
+        dir=$(realpath "$dir")
+        device=$(realpath "$device")
+
+        if [ "$use_fuse" -ne 0 ]; then
+            entry="bindfs#$device $dir fuse nonempty 0 0"
+        else
+            entry="$device $dir none bind"
+        fi
+
+        if ! grep -q "^$entry" /etc/fstab; then
+            echo 'Adding entry to fstab. . .'
+            echo "$entry" >> /etc/fstab
+        else
+            echo 'Found entry in fstab.'
+        fi
+    fi
 }
 
 # Unmounts $HOME from inside the repository.

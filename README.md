@@ -93,6 +93,41 @@ in multiple directories.
 
 ### dotfiler mount
 
+Mounts `$HOME`
+or another `DEVICE`
+at the `DIR` mount point
+(default is `home`)
+inside the repository.
+
+It allows your dotfiles
+to be applied
+outside the repository
+while keeping it organized.
+
+To do this,
+a hard link is created
+with [mount(8)].
+Since it requires root privileges,
+a FUSE filesystem is supported
+with [bindfs],
+if you pass
+the `--fuse` flag.
+In this case,
+it will be visible
+only for you.
+
+All files that exist in the mount point
+prior to this command
+will be intact.
+They will only be inaccessible
+while the mount is in place.
+
+You only need to keep the hard link
+while interacting with the repository,
+but you may persist it
+with `--fstab`,
+which adds an entry at `/etc/fstab`.
+
 ### dotfiler umount
 
 
@@ -109,4 +144,7 @@ See the [LICENSE].
 [changelog]: CHANGELOG.md
 [license]: LICENSE
 
+[bindfs]: https://bindfs.org
 [help2man]: https://www.gnu.org/software/help2man
+
+[mount(8)]: https://linux.die.net/man/8/mount
