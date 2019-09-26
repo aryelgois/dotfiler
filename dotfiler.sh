@@ -191,6 +191,12 @@ dotfiler_init () {
     if [ -n "$git_dir" ]; then
         git_dir=$(realpath "$git_dir")
 
+        # Check if $dir is inside .git.
+        if [ "$(git rev-parse --is-inside-work-tree)" != 'true' ]; then
+            stderr "A git repository was found at \`$git_dir', but you are not inside its work tree."
+            exit 1
+        fi
+
         # If it is at $HOME or if the user does not want to use it, ignore it.
         # If it is in the same directory, it will be used.
         if starts_with "$HOME" "$git_dir"; then
