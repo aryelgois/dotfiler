@@ -18,6 +18,12 @@ DEFAULT_DIR=home
 # Documentation
 # =============
 
+usage_init="$program init [DIR]"
+usage_add="$program add FILE..."
+usage_rm="$program rm FILE..."
+usage_mount="$program mount [-ft] [DIR] [DEVICE]"
+usage_umount="$program umount [-ft] [DIR]"
+
 # Outputs Dotfiler help.
 dotfiler_help () {
     cat <<EOF
@@ -34,11 +40,11 @@ FUSE filesystem, which should be easier for your administrator to enable than
 a full set of root permissions. If that is still a problem they can just add
 an entry in the fstab to stop your annoying mails.
 
-Usage: $program init [DIR]
-  or:  $program add FILE...
-  or:  $program rm FILE...
-  or:  $program mount [-ft] [DIR] [DEVICE]
-  or:  $program umount [-ft] [DIR]
+Usage: $usage_init
+  or:  $usage_add
+  or:  $usage_rm
+  or:  $usage_mount
+  or:  $usage_umount
   or:  $program --help
   or:  $program --version
 
@@ -133,7 +139,7 @@ is_root () {
 # of files that should not be under version control.
 dotfiler_init () {
     if [ $# -gt 1 ]; then
-        stderr "Usage: $program init [DIR]"
+        stderr "Usage: $usage_init"
         exit 1
     fi
 
@@ -347,7 +353,7 @@ dotfiler_mount () {
                         ;;
                     *)
                         stderr "Invalid flag \`$flag'."
-                        stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+                        stderr "Usage: $usage_mount"
                         exit 1
                         ;;
                     esac
@@ -372,7 +378,7 @@ EOF
                 dir=$1
             else
                 stderr "DIR must not be empty."
-                stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+                stderr "Usage: $usage_mount"
                 exit 1
             fi
         elif [ "$pos" -eq 2 ]; then
@@ -380,11 +386,11 @@ EOF
                 device=$1
             else
                 stderr "DEVICE must not be empty."
-                stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+                stderr "Usage: $usage_mount"
                 exit 1
             fi
         else
-            stderr "Usage: $program mount [-ft] [DIR] [DEVICE]"
+            stderr "Usage: $usage_mount"
             exit 1
         fi
 
@@ -464,7 +470,7 @@ dotfiler_umount () {
                         ;;
                     *)
                         stderr "Invalid flag \`$flag'."
-                        stderr "Usage: $program umount [-ft] [DIR]"
+                        stderr "Usage: $usage_umount"
                         exit 1
                         ;;
                     esac
@@ -489,11 +495,11 @@ EOF
                 dir=$1
             else
                 stderr "DIR must not be empty."
-                stderr "Usage: $program umount [-ft] [DIR]"
+                stderr "Usage: $usage_umount"
                 exit 1
             fi
         else
-            stderr "Usage: $program umount [-ft] [DIR]"
+            stderr "Usage: $usage_umount"
             exit 1
         fi
 
