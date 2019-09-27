@@ -266,7 +266,30 @@ dotfiler_init () {
     fi
 
     # Ask if should mount $HOME.
-    # TODO
+    printf "Would you like to mount your \$HOME? [Y/n] "
+    input=
+    read -r input
+    if [ "$input" = 'Y' ]; then
+        set --
+
+        if ! is_root; then
+            printf 'Would you like to use a FUSE filesystem? [Y/n] '
+            input=
+            read -r input
+            if [ "$input" = 'Y' ]; then
+                set -- --fuse
+            fi
+        fi
+
+        printf 'Would you like to add an entry to fstab? [y/N] '
+        input=
+        read -r input
+        if [ "$input" = 'y' ]; then
+            set -- "$@" --fstab
+        fi
+
+        dotfiler_mount "$@" "$target"
+    fi
 }
 
 # Adds files to the git index.
