@@ -424,8 +424,107 @@ EOF
 }
 
 # Unmounts $HOME from inside the repository.
+#
+# The positional argument is the mount point directory. If it is not provided,
+# $DEFAULT_DIR is used.
+#
+# It requires root privileges. If the mounting was done with `--fuse`, it
+# needs to use the same flag, and preferably be called by the same user.
+#
+# OPTIONS:
+#   -f, --fuse   Unmount a FUSE filesystem.
+#   -t, --fstab  Remove the entry from system's fstab.
 dotfiler_umount () {
-    :
+    use_fuse=0
+    update_fstab=0
+    dir=$DEFAULT_DIR
+
+    # Read arguments.
+    read_flags=1
+    pos=0
+    while [ $# -gt 0 ]; do
+        # Read flags.
+        if [ "$read_flags" -eq 1 ]; then
+            case $1 in
+            -f|--fuse)
+                use_fuse=1
+                ;;
+            -t|--fstab)
+                update_fstab=1
+                ;;
+            -*)
+                # Read grouped flags.
+                while read -r flag; do
+                    case $flag in
+                    f)
+                        use_fuse=1
+                        ;;
+                    t)
+                        update_fstab=1
+                        ;;
+                    *)
+                        stderr "Invalid flag \`$flag'."
+                        stderr "Usage: $program umount [-ft] [DIR]"
+                        exit 1
+                        ;;
+                    esac
+                done <<EOF
+$(echo "${1#-}" | fold -w 1)
+EOF
+                ;;
+            *)
+                read_flags=0
+                continue
+                ;;
+            esac
+
+            shift 1
+            continue
+        fi
+        pos=$(( pos + 1 ))
+
+        # Read positional arguments.
+        if [ "$pos" -eq 1 ]; then
+            if [ -n "$1" ]; then
+                dir=$1
+            else
+                stderr "DIR must not be empty."
+                stderr "Usage: $program umount [-ft] [DIR]"
+                exit 1
+            fi
+        else
+            stderr "Usage: $program umount [-ft] [DIR]"
+            exit 1
+        fi
+
+        shift 1
+    done
+
+    # Unmount $dir.
+    if mountpoint -q "$dir"; then
+        echo "Unmounting \`$dir'. . ."
+        if [ "$use_fuse" -ne 0 ]; then
+            fusermount -u "$dir"
+        else
+            umount "$dir"
+        fi
+    else
+        stderr "No mount point was found at \`$dir'."
+        exit 1
+    fi
+
+    # Update fstab.
+    if [ "$update_fstab" -ne 0 ]; then
+        dir=$(realpath "$dir")
+
+        if grep -q "$dir" /etc/fstab; then
+            echo 'Removing entry from fstab. . .'
+            grep -v "$dir" /etc/fstab > /tmp/fstab.new
+            mv -- /tmp/fstab.new /etc/fstab
+        else
+            echo 'No entries were found in fstab.'
+        fi
+    fi
 }
 
 

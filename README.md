@@ -130,6 +130,19 @@ which adds an entry at `/etc/fstab`.
 
 ### dotfiler umount
 
+Unmounts a mount point `DIR`
+inside the repository,
+which defaults to `home`.
+
+It undos the hard link to `$HOME`
+with [umount(8)].
+If the mounting was done with `--fuse`,
+you need to pass this flag as well.
+
+It also accepts `--fstab`
+to remove the matching entry
+from `/etc/fstab`.
+
 
 ## [Changelog]
 
@@ -148,3 +161,4 @@ See the [LICENSE].
 [help2man]: https://www.gnu.org/software/help2man
 
 [mount(8)]: https://linux.die.net/man/8/mount
+[umount(8)]: https://linux.die.net/man/8/umount
