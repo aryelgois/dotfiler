@@ -163,6 +163,13 @@ to remove the matching entry
 from `/etc/fstab`.
 
 
+## Tips
+
+- Make sure you did unmount your `$HOME`
+  before deleting the mount point
+  or the whole repository.
+
+
 ## [Changelog]
 
 See the [CHANGELOG.md][changelog].
