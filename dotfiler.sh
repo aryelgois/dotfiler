@@ -108,6 +108,56 @@ stderr () {
     >&2 echo "$@"
 }
 
+# Asks for user input.
+#
+# Usage: ask Yn|yN|optional|required PROMPT
+#
+# Yn|yN     Returns 0 for yes or 1 for no. Default option is in uppercase.
+# optional  Allows empty input.
+# required  Does not allow empty input.
+ask () {
+    AFTER=
+
+    case $1 in
+    Yn) AFTER='[Y/n] ' ;;
+    yN) AFTER='[y/N] ' ;;
+    optional|required) ;;
+    *)
+        stderr 'Invalid option for ask().'
+        exit 1
+        ;;
+    esac
+
+    while true; do
+        >&2 printf '%s' "$2 $AFTER"
+        INPUT=
+        read -r INPUT
+
+        case $1 in
+        Yn)
+            case $INPUT in
+            ''|y|Y|yes|Yes) return 0 ;;
+            *) return 1 ;;
+            esac
+            ;;
+        yN)
+            case $INPUT in
+            y|Y|yes|Yes) return 0 ;;
+            *) return 1 ;;
+            esac
+            ;;
+        optional)
+            break
+            ;;
+        required)
+            [ -z "$INPUT" ] || break
+            ;;
+        esac
+    done
+
+    echo "$INPUT"
+}
+
 # Checks if $1 starts with $2.
 starts_with () {
     case $1 in
@@ -165,15 +215,10 @@ dotfiler_init () {
 
     # If the user is at $HOME or above, ask where to put the repository.
     if starts_with "$HOME" "$(pwd -P)"; then
-        printf 'Where do you want to put the repository? '
-        dir=
-        read -r dir
+        dir=$(ask required 'Where do you want to put the repository?')
 
         # Test user input and create directory if it does not exist.
-        if [ -z "$dir" ]; then
-            stderr 'You must enter a directory, or cd to somewhere else.'
-            exit 1
-        elif [ -e "$dir" ]; then
+        if [ -e "$dir" ]; then
             if [ ! -d "$dir" ]; then
                 stderr "\`$dir' is not a directory."
                 exit 1
@@ -215,13 +260,7 @@ dotfiler_init () {
         if starts_with "$HOME" "$git_dir"; then
             git_dir=
         elif [ "$git_dir" != "$cwd/.git" ]; then
-            printf '%s' "Use repository at \`$git_dir'? [Y/n] "
-            input=
-            read -r input
-
-            if [ "$input" = 'n' ]; then
-                git_dir=
-            fi
+            ask Yn "Use repository at \`$git_dir'?" || git_dir=
         else
             echo "Found git repository at \`$git_dir'."
         fi
@@ -272,25 +311,18 @@ dotfiler_init () {
     fi
 
     # Ask if should mount $HOME.
-    printf "Would you like to mount your \$HOME? [Y/n] "
-    input=
-    read -r input
-    if [ "$input" = 'Y' ]; then
+    if ask Yn "Would you like to mount your \$HOME?"; then
         set --
 
-        if ! is_root; then
-            printf 'Would you like to use a FUSE filesystem? [Y/n] '
-            input=
-            read -r input
-            if [ "$input" = 'Y' ]; then
-                set -- --fuse
-            fi
+        default_fuse=$(is_root && echo yN || echo Yn)
+
+        if ask "$default_fuse" 'Would you like to use a FUSE filesystem?'; then
+            set -- --fuse
         fi
 
-        printf 'Would you like to add an entry to fstab? [y/N] '
-        input=
-        read -r input
-        if [ "$input" = 'y' ]; then
+        default_fstab=$(is_root && echo Yn || echo yN)
+
+        if ask "$default_fstab" 'Would you like to add an entry to fstab?'; then
             set -- "$@" --fstab
         fi
 
