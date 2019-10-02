@@ -331,8 +331,130 @@ dotfiler_init () {
 }
 
 # Adds files to the git index.
+#
+# A .gitignore file at the repository's root ignores all files inside the
+# mount point and maintains a list with re-included files. Each directory
+# must be re-included before the file.
+#
+# If an argument is a directory, a glob pattern is added to re-include all
+# files inside of it.
 dotfiler_add () {
-    :
+    if [ $# -eq 0 ]; then
+        stderr "Usage: $usage_add"
+        exit 1
+    fi
+
+    status_code=0
+
+    # For each argument..
+    while [ $# -gt 0 ]; do
+        arg=$1
+        shift 1
+
+        # Check if argument exists.
+        if [ ! -e "$arg" ]; then
+            stderr "\`$arg' does not exist."
+            status_code=1
+            continue
+        fi
+
+        target=$(realpath "$arg")
+
+        cd "$(dirname "$target")"
+
+        # Check if a git repository exists.
+        git_dir=$(git rev-parse --git-dir 2> /dev/null || true)
+        if [ -z "$git_dir" ]; then
+            stderr "Could not find a git repository above \`$arg'."
+            status_code=1
+            continue
+        fi
+
+        # Check if $arg is inside .git.
+        if [ "$(git rev-parse --is-inside-work-tree)" != 'true' ]; then
+            stderr "A git repository was found at \`$git_dir', but \`$arg' is not inside its work tree."
+            status_code=1
+            continue
+        fi
+
+        # Check if the repository is at $HOME or above.
+        git_dir=$(realpath "$git_dir")
+        if starts_with "$HOME" "$git_dir"; then
+            stderr "You can not keep the repository directly or above your \$HOME."
+            status_code=1
+            continue
+        fi
+
+        # Get the repository's root path.
+        repo_root=$(dirname "$git_dir")
+
+        # Check if repository has a .gitignore file.
+        gitignore_file=$repo_root/.gitignore
+        if [ ! -f "$gitignore_file" ]; then
+            stderr "Could not find a .gitignore file at \'$repo_root'."
+            status_code=1
+            continue
+        fi
+
+        # Get relative path to target from repository.
+        relative_target=${target#$repo_root/}
+
+        # Find base directory in .gitignore that contains target.
+        base=
+        while read -r match; do
+            match=${match#/}
+            match=${match%/*}
+
+            if starts_with "$relative_target" "$match/"; then
+                base=$match
+                break
+            fi
+        done <<EOF
+$(grep -o '^/.*/\*\*' "$gitignore_file")
+EOF
+        if [ -z "$base" ]; then
+            stderr "Could not find base directory in \`$gitignore_file' that contains \`$target'."
+            status_code=1
+            continue
+        fi
+
+        # Get relative path to target from base directory.
+        relative_target=${relative_target#$base/}
+
+        # Check whether $target is a directory.
+        if [ -d "$target" ]; then
+            relative_target=$relative_target/\\\*\\\*
+        fi
+
+        # Add each path fragment to .gitignore.
+        previous=/$base/\\\*\\\*
+        entry=!/$base
+        while [ -n "$relative_target" ]; do
+            case $relative_target in
+            */*)
+                entry=$entry/${relative_target%%/*}/
+                relative_target=${relative_target#*/}
+                ;;
+            *)
+                entry=$entry/$relative_target
+                relative_target=
+                ;;
+            esac
+
+            if ! grep -q "^$entry" "$gitignore_file"; then
+                sed "s|^$previous\$|&\n$entry|" "$gitignore_file" > "$gitignore_file.new"
+                mv -- "$gitignore_file.new" "$gitignore_file"
+            fi
+
+            previous=$entry
+            entry=${entry%/}
+        done
+
+        # Update git index.
+        git add "$gitignore_file" "$target"
+    done
+
+    exit $status_code
 }
 
 # Removes files from the working tree and index.

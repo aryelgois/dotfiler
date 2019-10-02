@@ -89,6 +89,25 @@ in multiple directories.
 
 ### dotfiler add
 
+Adds one or more files
+to the re-included files in `.gitignore`
+and to the git index.
+
+The entries in the `.gitignore` file
+don't need to be alphabetically ordered,
+but you can maintain it if you will.
+They only have to be ordered with
+a parent directory before its contents.
+
+If an argument is a directory,
+a glob pattern is added
+to re-include all files
+inside of it.
+It is a convenience feature
+for directories with dynamic content,
+but adding each file explicitly
+is preferable.
+
 ### dotfiler rm
 
 ### dotfiler mount
