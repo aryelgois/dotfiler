@@ -2,6 +2,22 @@
 
 Maintain your dotfiles easily.
 
+##### Table of Contents
+
+- [What is it?]
+- [How does it work?]
+- [Installing]
+- [Using]
+- [Commands]
+  - [dotfiler init]
+  - [dotfiler add]
+  - [dotfiler rm]
+  - [dotfiler mount]
+  - [dotfiler umount]
+- [Tips]
+- [Changelog]
+- [License]
+
 
 ## What is it?
 
@@ -179,6 +195,18 @@ See the [CHANGELOG.md][changelog].
 
 See the [LICENSE].
 
+
+[what is it?]: #what-is-it
+[how does it work?]: #how-does-it-work
+[installing]: #installing
+[using]: #using
+[commands]: #commands
+[dotfiler init]: #dotfiler-init
+[dotfiler add]: #dotfiler-add
+[dotfiler rm]: #dotfiler-rm
+[dotfiler mount]: #dotfiler-mount
+[dotfiler umount]: #dotfiler-umount
+[tips]: #tips
 
 [changelog]: CHANGELOG.md
 [license]: LICENSE
