@@ -383,10 +383,10 @@ dotfiler_add () {
 
         target=$(realpath "$arg")
 
-        cd "$(dirname "$target")"
+        dir=$(dirname "$target")
 
         # Check if a git repository exists.
-        git_dir=$(git rev-parse --git-dir 2> /dev/null || true)
+        git_dir=$(git -C "$dir" rev-parse --git-dir 2> /dev/null || true)
         if [ -z "$git_dir" ]; then
             stderr "Could not find a git repository above \`$arg'."
             status_code=1
@@ -394,7 +394,7 @@ dotfiler_add () {
         fi
 
         # Check if $arg is inside .git.
-        if [ "$(git rev-parse --is-inside-work-tree)" != 'true' ]; then
+        if [ "$(git -C "$dir" rev-parse --is-inside-work-tree)" != 'true' ]; then
             stderr "A git repository was found at \`$git_dir', but \`$arg' is not inside its work tree."
             status_code=1
             continue
@@ -496,7 +496,6 @@ dotfiler_rm () {
         exit 1
     fi
 
-    cwd=$(pwd)
     status_code=0
 
     # For each argument..
@@ -505,7 +504,6 @@ dotfiler_rm () {
         shift 1
 
         # Check if argument exists.
-        cd "$cwd"
         if [ ! -e "$arg" ]; then
             stderr "\`$arg' does not exist."
             status_code=1
@@ -514,10 +512,10 @@ dotfiler_rm () {
 
         target=$(realpath "$arg")
 
-        cd "$(dirname "$target")"
+        dir=$(dirname "$target")
 
         # Check if a git repository exists.
-        git_dir=$(git rev-parse --git-dir 2> /dev/null || true)
+        git_dir=$(git -C "$dir" rev-parse --git-dir 2> /dev/null || true)
         if [ -z "$git_dir" ]; then
             stderr "Could not find a git repository above \`$arg'."
             status_code=1
@@ -525,7 +523,7 @@ dotfiler_rm () {
         fi
 
         # Check if $arg is inside .git.
-        if [ "$(git rev-parse --is-inside-work-tree)" != 'true' ]; then
+        if [ "$(git -C "$dir" rev-parse --is-inside-work-tree)" != 'true' ]; then
             stderr "A git repository was found at \`$git_dir', but \`$arg' is not inside its work tree."
             status_code=1
             continue
