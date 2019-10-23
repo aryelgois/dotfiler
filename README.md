@@ -211,6 +211,11 @@ from `/etc/fstab`.
   before deleting the mount point
   or the whole repository.
 
+- If you are removing
+  the only file in a directory,
+  it will be deleted as well.
+  You should not be inside of it.
+
 
 ## [Changelog]
 
