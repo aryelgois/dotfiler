@@ -187,6 +187,9 @@ is_root () {
 # A .gitignore file is created at the repository's root with an entry to
 # ignore everything inside the target, because $HOME usually contains a lot
 # of files that should not be under version control.
+#
+# An initial commit is created if the repository does not have any, or a
+# descriptive one if the index is clean.
 dotfiler_init () {
     if [ $# -gt 1 ]; then
         stderr "Usage: $usage_init"
@@ -274,6 +277,14 @@ dotfiler_init () {
         repo_root=$(dirname "$git_dir")
     fi
 
+    # Check if index is clean.
+    if [ -z "$(git status --porcelain --untracked-files=no)" ]; then
+        is_clean=true
+    else
+        echo 'Notice: index is not clean.'
+        is_clean=false
+    fi
+
     # Get relative path to target directory from repository.
     if [ "$repo_root" != "$cwd" ]; then
         relative_target=${cwd#$repo_root/}/$target
@@ -308,6 +319,18 @@ dotfiler_init () {
     if [ ! -e "$target" ]; then
         echo "Creating \`$target' directory. . ."
         mkdir "$target"
+    fi
+
+    # Create commit.
+    if $is_clean; then
+        git add "$gitignore_file" "$readme_file"
+        if [ -z "$(git rev-list -n 1 --all 2> /dev/null)" ]; then
+            echo 'Creating an Initial commit. . .'
+            git commit -m 'Initial commit'
+        else
+            echo 'Committing new mount point. . .'
+            git commit -m "Add \`$relative_target' mount point"
+        fi
     fi
 
     # Ask if should mount $HOME.

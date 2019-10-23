@@ -103,6 +103,15 @@ with different arguments
 to organize your dotfiles
 in multiple directories.
 
+An initial commit is created
+on new repositories,
+or a descriptive one
+if the index is clean.
+
+> The directory itself
+> is not included in the commit.
+> Dotfiler does not use files like `.gitkeep`.
+
 ### dotfiler add
 
 Adds one or more files
