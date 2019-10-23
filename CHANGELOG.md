@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `dotfiler mount`
   - `dotfiler umount`
   - `dotfiler add`
+  - `dotfiler rm`
 - [Makefile]
 
 

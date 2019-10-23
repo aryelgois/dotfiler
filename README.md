@@ -135,6 +135,23 @@ is preferable.
 
 ### dotfiler rm
 
+Removes one or more files
+from the working tree,
+the git index
+and the re-included files in `.gitignore`.
+
+It does not remove directory entries
+unless an argument is a directory,
+in which case
+all tracked files inside of it
+and all entries that starts with it
+are removed.
+
+It can not remove files
+inside a directory re-included with a glob pattern.
+You will have to
+add an exclude rule manually.
+
 ### dotfiler mount
 
 Mounts `$HOME`
