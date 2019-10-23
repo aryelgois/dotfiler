@@ -500,33 +500,33 @@ dotfiler_rm () {
 #   -f, --fuse   Use a FUSE filesystem with bindfs(1).
 #   -t, --fstab  Add an entry to the system's fstab.
 dotfiler_mount () {
-    use_fuse=0
-    update_fstab=0
+    use_fuse=false
+    update_fstab=false
     dir=$DEFAULT_DIR
     device=$HOME
 
     # Read arguments.
-    read_flags=1
+    read_flags=true
     pos=0
     while [ $# -gt 0 ]; do
         # Read flags.
-        if [ "$read_flags" -eq 1 ]; then
+        if $read_flags; then
             case $1 in
             -f|--fuse)
-                use_fuse=1
+                use_fuse=true
                 ;;
             -t|--fstab)
-                update_fstab=1
+                update_fstab=true
                 ;;
             -*)
                 # Read grouped flags.
                 while read -r flag; do
                     case $flag in
                     f)
-                        use_fuse=1
+                        use_fuse=true
                         ;;
                     t)
-                        update_fstab=1
+                        update_fstab=true
                         ;;
                     *)
                         stderr "Invalid flag \`$flag'."
@@ -539,7 +539,7 @@ $(echo "${1#-}" | fold -w 1)
 EOF
                 ;;
             *)
-                read_flags=0
+                read_flags=false
                 continue
                 ;;
             esac
@@ -578,7 +578,7 @@ EOF
     if mountpoint -q "$dir"; then
         stderr "There is a mount point at \`$dir'."
         exit 1
-    elif [ "$use_fuse" -ne 0 ]; then
+    elif $use_fuse; then
         echo "Mounting into \`$dir' with FUSE filesystem. . ."
         bindfs -o nonempty,"$(is_root || echo no-allow-other)" "$device" "$dir"
     else
@@ -587,11 +587,11 @@ EOF
     fi
 
     # Update fstab.
-    if [ "$update_fstab" -ne 0 ]; then
+    if $update_fstab; then
         dir=$(realpath "$dir")
         device=$(realpath "$device")
 
-        if [ "$use_fuse" -ne 0 ]; then
+        if $use_fuse; then
             entry="bindfs#$device $dir fuse nonempty 0 0"
         else
             entry="$device $dir none bind"
@@ -618,32 +618,32 @@ EOF
 #   -f, --fuse   Unmount a FUSE filesystem.
 #   -t, --fstab  Remove the entry from system's fstab.
 dotfiler_umount () {
-    use_fuse=0
-    update_fstab=0
+    use_fuse=false
+    update_fstab=false
     dir=$DEFAULT_DIR
 
     # Read arguments.
-    read_flags=1
+    read_flags=true
     pos=0
     while [ $# -gt 0 ]; do
         # Read flags.
-        if [ "$read_flags" -eq 1 ]; then
+        if $read_flags; then
             case $1 in
             -f|--fuse)
-                use_fuse=1
+                use_fuse=true
                 ;;
             -t|--fstab)
-                update_fstab=1
+                update_fstab=true
                 ;;
             -*)
                 # Read grouped flags.
                 while read -r flag; do
                     case $flag in
                     f)
-                        use_fuse=1
+                        use_fuse=true
                         ;;
                     t)
-                        update_fstab=1
+                        update_fstab=true
                         ;;
                     *)
                         stderr "Invalid flag \`$flag'."
@@ -656,7 +656,7 @@ $(echo "${1#-}" | fold -w 1)
 EOF
                 ;;
             *)
-                read_flags=0
+                read_flags=false
                 continue
                 ;;
             esac
@@ -686,7 +686,7 @@ EOF
     # Unmount $dir.
     if mountpoint -q "$dir"; then
         echo "Unmounting \`$dir'. . ."
-        if [ "$use_fuse" -ne 0 ]; then
+        if $use_fuse; then
             fusermount -u "$dir"
         else
             umount "$dir"
@@ -697,7 +697,7 @@ EOF
     fi
 
     # Update fstab.
-    if [ "$update_fstab" -ne 0 ]; then
+    if $update_fstab; then
         dir=$(realpath "$dir")
 
         if grep -q "$dir" /etc/fstab; then
