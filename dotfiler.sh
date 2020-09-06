@@ -2,7 +2,7 @@
 #
 # Dotfiler - maintain your dotfiles easily
 #
-# Copyright (c) 2019 Aryel Mota Góis <aryel.gois@gmail.com>
+# Copyright (c) 2019-2020 Aryel Mota Góis <aryel.gois@gmail.com>
 #
 # MIT License
 
@@ -76,7 +76,7 @@ dotfiler_version () {
     cat <<EOF
 Dotfiler version $version
 
-Copyright (c) 2019 Aryel Mota Góis <aryel.gois@gmail.com>.
+Copyright (c) 2019-2020 Aryel Mota Góis <aryel.gois@gmail.com>.
 
 MIT License <https://opensource.org/licenses/MIT>.
 This is free software: you are free to change and redistribute it.
