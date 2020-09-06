@@ -810,13 +810,8 @@ EOF
 # =========
 
 main () {
-    if [ $# -eq 0 ]; then
-        >&2 dotfiler_help
-        exit 1
-    fi
-
-    cmd=$1
-    shift
+    cmd=${1:-}
+    [ $# -eq 0 ] || shift
 
     case $cmd in
     init) dotfiler_init "$@" ;;
