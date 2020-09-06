@@ -474,7 +474,7 @@ EOF
         done
 
         # Update git index.
-        git add "$gitignore_file" "$target"
+        git -C "$repo_root" add "$gitignore_file" "$target"
     done
 
     exit $status_code
@@ -580,15 +580,15 @@ EOF
         if grep -q "^$entry" "$gitignore_file"; then
             # Remove from working tree and index.
             if [ -d "$target" ]; then
-                git rm -r "$target"
+                git -C "$repo_root" rm -r "$target"
             else
-                git rm "$target"
+                git -C "$repo_root" rm "$target"
             fi
 
             # Remove from .gitignore.
             grep -v "^$entry" "$gitignore_file" > "$gitignore_file.new"
             mv -- "$gitignore_file.new" "$gitignore_file"
-            git add "$gitignore_file"
+            git -C "$repo_root" add "$gitignore_file"
         else
             stderr "\`$relative_target' is not listed in \`$gitignore_file'."
             status_code=1
