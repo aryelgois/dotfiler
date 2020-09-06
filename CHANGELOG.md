@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace `mkdir -p` with a more portable command
+
 
 ## [0.1.0] - 2019-10-26
 

@@ -211,7 +211,7 @@ dotfiler_init () {
     case $dir in
     */*)
         dir=$(dirname "$dir")
-        mkdir -p "$dir"
+        install -d "$dir"
         cd "$dir"
         ;;
     esac
@@ -227,7 +227,7 @@ dotfiler_init () {
                 exit 1
             fi
         else
-            mkdir -p "$dir"
+            install -d "$dir"
         fi
 
         cd "$dir"
