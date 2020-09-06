@@ -29,7 +29,7 @@ so you can take them anywhere.
 ## How does it work?
 
 You keep a hard link of your `$HOME`
-inside the repository
+inside your repository
 and git does the hard work for you.
 
 Dotfiler helps with mounting/unmounting
@@ -39,10 +39,10 @@ you don't want to track,
 a `.gitignore` excludes everything
 except what you explicitly added.
 
-Once you update the working tree
+If your `$HOME` is mounted inside your repo
+and you update its working tree
 with `git pull` or changing branches,
-all your dotfiles are automatically updated
-(if your `$HOME` is mounted inside the repo).
+all your dotfiles are automatically updated.
 If there are merge conflicts though,
 you will need to solve them.
 
@@ -67,9 +67,11 @@ a man page will be generated for you.
 
 ## Using
 
-Initialize a new repository with `dotfiler init`
-or clone an existing one,
-then make sure your `$HOME` has a hard link
+Initialize a new repository with `dotfiler init`,
+or clone an existing one
+and run this command inside of it.
+
+Make sure your `$HOME` has a hard link
 at the mount point
 with `dotfiler mount`.
 
