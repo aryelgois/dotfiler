@@ -168,7 +168,7 @@ starts_with () {
 
 # Checks if effective user is root.
 is_root () {
-    if [ "$(id -u)" != "0" ]; then
+    if [ "$(id -u)" != '0' ]; then
         return 1
     fi
 }
