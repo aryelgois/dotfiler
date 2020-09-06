@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replace `mkdir -p` with a more portable command
 
+### Removed
+
+- Unused and duplicated code
+
 ### Fixed
 
 - Use correct git repository when outside of it

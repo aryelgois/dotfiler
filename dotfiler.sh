@@ -551,25 +551,6 @@ dotfiler_rm () {
         # Get relative path to target from repository.
         relative_target=${target#$repo_root/}
 
-        # Find base directory in .gitignore that contains target.
-        base=
-        while read -r match; do
-            match=${match#/}
-            match=${match%/*}
-
-            if starts_with "$relative_target" "$match/"; then
-                base=$match
-                break
-            fi
-        done <<EOF
-$(grep -o '^/.*/\*\*' "$gitignore_file")
-EOF
-        if [ -z "$base" ]; then
-            stderr "Could not find base directory in \`$gitignore_file' that contains \`$target'."
-            status_code=1
-            continue
-        fi
-
         # Check whether $target is a directory.
         if [ -d "$target" ]; then
             relative_target=$relative_target/
