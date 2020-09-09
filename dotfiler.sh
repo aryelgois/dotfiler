@@ -21,8 +21,8 @@ DEFAULT_DIR=home
 usage_init="$program init [DIR]"
 usage_add="$program add FILE..."
 usage_rm="$program rm FILE..."
-usage_mount="$program mount [-ft] [DIR] [DEVICE]"
-usage_umount="$program umount [-ft] [DIR]"
+usage_mount="$program mount [-ft] [--] [DIR] [DEVICE]"
+usage_umount="$program umount [-ft] [--] [DIR]"
 
 # Outputs Dotfiler help.
 dotfiler_help () {
@@ -597,77 +597,61 @@ dotfiler_rm () {
 dotfiler_mount () {
     use_fuse=false
     update_fstab=false
-    dir=$DEFAULT_DIR
-    device=$HOME
 
-    # Read arguments.
-    read_flags=true
-    pos=0
+    # Read flags.
     while [ $# -gt 0 ]; do
-        # Read flags.
-        if $read_flags; then
-            case $1 in
-            -f|--fuse)
-                use_fuse=true
-                ;;
-            -t|--fstab)
-                update_fstab=true
-                ;;
-            -*)
-                # Read grouped flags.
-                while read -r flag; do
-                    case $flag in
-                    f)
-                        use_fuse=true
-                        ;;
-                    t)
-                        update_fstab=true
-                        ;;
-                    *)
-                        stderr "Invalid flag \`$flag'."
-                        stderr "Usage: $usage_mount"
-                        exit 1
-                        ;;
-                    esac
-                done <<EOF
-$(echo "${1#-}" | fold -w 1)
-EOF
-                ;;
-            *)
-                read_flags=false
-                continue
-                ;;
-            esac
+        arg=$1
+        shift
 
-            shift 1
-            continue
-        fi
-        pos=$(( pos + 1 ))
-
-        # Read positional arguments.
-        if [ "$pos" -eq 1 ]; then
-            if [ -n "$1" ]; then
-                dir=$1
-            else
-                stderr "DIR must not be empty."
-                stderr "Usage: $usage_mount"
-                exit 1
-            fi
-        elif [ "$pos" -eq 2 ]; then
-            if [ -n "$1" ]; then
-                device=$1
-            else
-                stderr "DEVICE must not be empty."
-                stderr "Usage: $usage_mount"
-                exit 1
-            fi
-        else
+        case $arg in
+        -f|--fuse) use_fuse=true ;;
+        -t|--fstab) update_fstab=true ;;
+        --) break ;;
+        --*)
+            stderr "Invalid flag \`$arg'."
             stderr "Usage: $usage_mount"
             exit 1
-        fi
-
-        shift 1
+            ;;
+        -*)
+            # Expand grouped flags.
+            while read -r flag; do
+                case $flag in
+                f|t) set -- "-$flag" "$@" ;;
+                *)
+                    stderr "Invalid flag \`$flag'."
+                    stderr "Usage: $usage_mount"
+                    exit 1
+                    ;;
+                esac
+            done <<EOF
+$(echo "${arg#-}" | fold -w 1)
+EOF
+            ;;
+        *)
+            set -- "$arg" "$@"
+            break
+            ;;
+        esac
     done
+
+    # Read positional arguments.
+    dir=${1:-$DEFAULT_DIR}
+    device=${2:-$HOME}
+
+    # Check arguments.
+    err=false
+    if [ -z "$dir" ]; then
+        stderr 'DIR must not be empty.'
+        err=true
+    fi
+    if [ -z "$device" ]; then
+        stderr 'DEVICE must not be empty.'
+        err=true
+    fi
+    if $err || [ $# -gt 2 ]; then
+        stderr "Usage: $usage_mount"
+        exit 1
+    fi
 
     # Mount $device into $dir.
     if mountpoint -q "$dir"; then
@@ -715,68 +699,56 @@ EOF
 dotfiler_umount () {
     use_fuse=false
     update_fstab=false
-    dir=$DEFAULT_DIR
 
-    # Read arguments.
-    read_flags=true
-    pos=0
+    # Read flags.
     while [ $# -gt 0 ]; do
-        # Read flags.
-        if $read_flags; then
-            case $1 in
-            -f|--fuse)
-                use_fuse=true
-                ;;
-            -t|--fstab)
-                update_fstab=true
-                ;;
-            -*)
-                # Read grouped flags.
-                while read -r flag; do
-                    case $flag in
-                    f)
-                        use_fuse=true
-                        ;;
-                    t)
-                        update_fstab=true
-                        ;;
-                    *)
-                        stderr "Invalid flag \`$flag'."
-                        stderr "Usage: $usage_umount"
-                        exit 1
-                        ;;
-                    esac
-                done <<EOF
-$(echo "${1#-}" | fold -w 1)
-EOF
-                ;;
-            *)
-                read_flags=false
-                continue
-                ;;
-            esac
+        arg=$1
+        shift
 
-            shift 1
-            continue
-        fi
-        pos=$(( pos + 1 ))
-
-        # Read positional arguments.
-        if [ "$pos" -eq 1 ]; then
-            if [ -n "$1" ]; then
-                dir=$1
-            else
-                stderr "DIR must not be empty."
-                stderr "Usage: $usage_umount"
-                exit 1
-            fi
-        else
+        case $arg in
+        -f|--fuse) use_fuse=true ;;
+        -t|--fstab) update_fstab=true ;;
+        --) break ;;
+        --*)
+            stderr "Invalid flag \`$arg'."
             stderr "Usage: $usage_umount"
             exit 1
-        fi
-
-        shift 1
+            ;;
+        -*)
+            # Expand grouped flags.
+            while read -r flag; do
+                case $flag in
+                f|t) set -- "-$flag" "$@" ;;
+                *)
+                    stderr "Invalid flag \`$flag'."
+                    stderr "Usage: $usage_umount"
+                    exit 1
+                    ;;
+                esac
+            done <<EOF
+$(echo "${arg#-}" | fold -w 1)
+EOF
+            ;;
+        *)
+            set -- "$arg" "$@"
+            break
+            ;;
+        esac
     done
+
+    # Read positional arguments.
+    dir=${1:-$DEFAULT_DIR}
+
+    # Check arguments.
+    err=false
+    if [ -z "$dir" ]; then
+        stderr 'DIR must not be empty.'
+        err=true
+    fi
+    if $err || [ $# -gt 1 ]; then
+        stderr "Usage: $usage_umount"
+        exit 1
+    fi
 
     # Unmount $dir.
     if mountpoint -q "$dir"; then
