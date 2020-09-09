@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Use correct git repository when outside of it
+- Avoid using a repository at `$HOME` or above
 
 
 ## [0.1.0] - 2019-10-26

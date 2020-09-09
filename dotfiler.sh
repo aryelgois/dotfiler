@@ -258,9 +258,9 @@ dotfiler_init () {
             exit 1
         fi
 
-        # If it is at $HOME or if the user does not want to use it, ignore it.
-        # If it is in the same directory, it will be used.
-        if starts_with "$HOME" "$git_dir"; then
+        # If it is at $HOME or above, or if the user does not want to use it,
+        # ignore it. If it is in the same directory, it will be used.
+        if starts_with "$HOME" "$(dirname "$git_dir")"; then
             git_dir=
         elif [ "$git_dir" != "$cwd/.git" ]; then
             ask Yn "Use repository at \`$git_dir'?" || git_dir=
@@ -402,7 +402,7 @@ dotfiler_add () {
 
         # Check if the repository is at $HOME or above.
         git_dir=$(realpath "$git_dir")
-        if starts_with "$HOME" "$git_dir"; then
+        if starts_with "$HOME" "$(dirname "$git_dir")"; then
             stderr "You can not keep the repository directly or above your \$HOME."
             status_code=1
             continue
@@ -531,7 +531,7 @@ dotfiler_rm () {
 
         # Check if the repository is at $HOME or above.
         git_dir=$(realpath "$git_dir")
-        if starts_with "$HOME" "$git_dir"; then
+        if starts_with "$HOME" "$(dirname "$git_dir")"; then
             stderr "You can not keep the repository directly or above your \$HOME."
             status_code=1
             continue
