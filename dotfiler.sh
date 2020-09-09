@@ -385,6 +385,8 @@ dotfiler_add () {
 
         dir=$(dirname "$target")
 
+        export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
         # Check if a git repository exists.
         git_dir=$(git -C "$dir" rev-parse --git-dir 2> /dev/null || true)
         if [ -z "$git_dir" ]; then
@@ -399,6 +401,8 @@ dotfiler_add () {
             status_code=1
             continue
         fi
+
+        unset GIT_DISCOVERY_ACROSS_FILESYSTEM
 
         # Check if the repository is at $HOME or above.
         git_dir=$(realpath "$git_dir")
@@ -514,6 +518,8 @@ dotfiler_rm () {
 
         dir=$(dirname "$target")
 
+        export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
         # Check if a git repository exists.
         git_dir=$(git -C "$dir" rev-parse --git-dir 2> /dev/null || true)
         if [ -z "$git_dir" ]; then
@@ -528,6 +534,8 @@ dotfiler_rm () {
             status_code=1
             continue
         fi
+
+        unset GIT_DISCOVERY_ACROSS_FILESYSTEM
 
         # Check if the repository is at $HOME or above.
         git_dir=$(realpath "$git_dir")
