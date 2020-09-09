@@ -372,7 +372,7 @@ dotfiler_add () {
     # For each argument..
     while [ $# -gt 0 ]; do
         arg=$1
-        shift 1
+        shift
 
         # Check if argument exists.
         if [ ! -e "$arg" ]; then
@@ -505,7 +505,7 @@ dotfiler_rm () {
     # For each argument..
     while [ $# -gt 0 ]; do
         arg=$1
-        shift 1
+        shift
 
         # Check if argument exists.
         if [ ! -e "$arg" ]; then
