@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.2.0] - 2020-09-13
+
 ### Added
 
 - `mount` and `umount` commands support `--`
@@ -42,7 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Makefile]
 
 
-[unreleased]: https://github.com/aryelgois/dotfiler/compare/v0.1.0...develop
+[unreleased]: https://github.com/aryelgois/dotfiler/compare/v0.2.0...develop
+[0.2.0]: https://github.com/aryelgois/dotfiler/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/aryelgois/dotfiler/compare/initial-commit...v0.1.0
 
 [makefile]: Makefile
