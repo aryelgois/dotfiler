@@ -18,7 +18,7 @@ DEFAULT_DIR=home
 # Documentation
 # =============
 
-usage_init="$program init [DIR]"
+usage_init="$program init [REPO_ROOT] [DIR]"
 usage_add="$program add FILE..."
 usage_rm="$program rm FILE..."
 usage_mount="$program mount [-ft] [--] [DIR] [DEVICE]"
@@ -57,7 +57,8 @@ Options:
   -v, --version  Show the version information and exit.
 
 Commands:
-  init           Creates a git repository and the mount point DIR, which
+  init           Creates a git repository at REPO_ROOT (default is current
+                 directory), and the mount point DIR inside of it, which
                  defaults to \`home'. It may use an existing repo and ask if
                  should mount right away.
   add            Adds one or more FILEs to the re-included files in .gitignore
@@ -173,16 +174,32 @@ is_root () {
     fi
 }
 
+# Creates a directory if it does not exist and enter it.
+mkdir_cd () {
+    if [ -e "$1" ]; then
+        if [ ! -d "$1" ]; then
+            stderr "\`$1' is not a directory."
+            exit 1
+        fi
+    else
+        echo "Creating \`$1'. . ."
+        install -d "$1"
+    fi
+
+    cd "$1"
+}
+
 
 # Commands
 # ========
 
 # Initializes a Dotfiler repository.
 #
-# $1 is the target path to a directory that will be a hard link to $HOME.
-# If it is empty, $DEFAULT_DIR is used. It must end with a name.
+# $1 is the path to the root of a git repository, which defaults to the
+# current directory. If no repository is found, a new one is initialized.
 #
-# If no git repository relative to target is found, a new one is initialized.
+# $2 is the path to a directory relative to $1 that will be a hard link
+# to $HOME. If it is empty, $DEFAULT_DIR is used. It must end with a name.
 #
 # A .gitignore file is created at the repository's root with an entry to
 # ignore everything inside the target, because $HOME usually contains a lot
@@ -191,46 +208,37 @@ is_root () {
 # An initial commit is created if the repository does not have any, or a
 # descriptive one if the index is clean.
 dotfiler_init () {
-    if [ $# -gt 1 ]; then
+    repo_root=${1:-.}
+    dir=${2:-$DEFAULT_DIR}
+
+    # $dir must be relative and valid.
+    err=false
+    case $dir in
+    /*)
+        stderr 'DIR must be relative.'
+        err=true
+        ;;
+    esac
+    case $dir in
+    *\**|.|..|*/.|*/..)
+        stderr 'DIR is invalid.'
+        err=true
+        ;;
+    esac
+
+    if $err || [ $# -gt 2 ]; then
         stderr "Usage: $usage_init"
         exit 1
     fi
 
-    dir=${1:-$DEFAULT_DIR}
-    target=$(basename "$dir")
+    mkdir_cd "$repo_root"
 
-    # The argument must end with a valid file name.
-    case $target in
-    .|..)
-        stderr 'Invalid directory.'
-        exit 1
-        ;;
-    esac
-
-    # If the argument is a path, follow it up to dirname.
-    case $dir in
-    */*)
-        dir=$(dirname "$dir")
-        install -d "$dir"
-        cd "$dir"
-        ;;
-    esac
-
-    # If the user is at $HOME or above, ask where to put the repository.
+    # If $repo_root is at $HOME or above, ask where to put the repository.
     if starts_with "$HOME" "$(pwd -P)"; then
-        dir=$(ask required 'Where do you want to put the repository?')
+        repo_root=$(ask required 'Where do you want to put the repository?')
 
         # Test user input and create directory if it does not exist.
-        if [ -e "$dir" ]; then
-            if [ ! -d "$dir" ]; then
-                stderr "\`$dir' is not a directory."
-                exit 1
-            fi
-        else
-            install -d "$dir"
-        fi
-
-        cd "$dir"
+        mkdir_cd "$repo_root"
 
         # Block an atempt to enter the $HOME in the previous input.
         if starts_with "$HOME" "$(pwd -P)"; then
@@ -239,31 +247,29 @@ dotfiler_init () {
         fi
     fi
 
-    # The target must be a directory.
-    if [ -e "$target" ] && [ ! -d "$target" ]; then
-        stderr "\`$(pwd)/$target' is not a directory."
+    repo_root=$(pwd -P)
+
+    # The target must be a directory, if it already exists.
+    if [ -e "$dir" ] && [ ! -d "$dir" ]; then
+        stderr "\`$repo_root/$dir' is not a directory."
         exit 1
     fi
-
-    cwd=$(pwd -P)
 
     # Check if a git repository already exists.
     git_dir=$(git rev-parse --git-dir 2> /dev/null || true)
     if [ -n "$git_dir" ]; then
         git_dir=$(realpath "$git_dir")
 
-        # Check if $dir is inside .git.
+        # Check if $repo_root is inside .git.
         if [ "$(git rev-parse --is-inside-work-tree)" != 'true' ]; then
             stderr "A git repository was found at \`$git_dir', but you are not inside its work tree."
             exit 1
         fi
 
-        # If it is at $HOME or above, or if the user does not want to use it,
+        # If it is at $HOME or above it or above the current directory,
         # ignore it. If it is in the same directory, it will be used.
-        if starts_with "$HOME" "$(dirname "$git_dir")"; then
+        if starts_with "$HOME" "$(dirname "$git_dir")" || [ "$git_dir" != "$repo_root/.git" ]; then
             git_dir=
-        elif [ "$git_dir" != "$cwd/.git" ]; then
-            ask Yn "Use repository at \`$git_dir'?" || git_dir=
         else
             echo "Found git repository at \`$git_dir'."
         fi
@@ -272,7 +278,6 @@ dotfiler_init () {
     # Create new git repository and get its root path.
     if [ -z "$git_dir" ]; then
         git init
-        repo_root=$cwd
     else
         repo_root=$(dirname "$git_dir")
     fi
@@ -285,27 +290,20 @@ dotfiler_init () {
         is_clean=false
     fi
 
-    # Get relative path to target directory from repository.
-    if [ "$repo_root" != "$cwd" ]; then
-        relative_target=${cwd#$repo_root/}/$target
-    else
-        relative_target=$target
-    fi
-
     # Create or update .gitignore file.
     gitignore_file=$repo_root/.gitignore
     if [ -e "$gitignore_file" ]; then
-        if ! grep -q "^/$relative_target/\*\*" "$gitignore_file"; then
+        if ! grep -q "^/$dir/\*\*" "$gitignore_file"; then
             echo 'Updating .gitignore. . .'
             echo >> "$gitignore_file"
-            echo "/$relative_target/**" >> "$gitignore_file"
+            echo "/$dir/**" >> "$gitignore_file"
         else
-            stderr "\`$relative_target' is already initialized."
+            stderr "\`$dir' is already initialized."
             exit 1
         fi
     else
         echo 'Creating a .gitignore file. . .'
-        echo "/$relative_target/**" > "$gitignore_file"
+        echo "/$dir/**" > "$gitignore_file"
     fi
 
     # Create README file.
@@ -316,9 +314,9 @@ dotfiler_init () {
     fi
 
     # Create the target directory.
-    if [ ! -e "$target" ]; then
-        echo "Creating \`$target' directory. . ."
-        mkdir "$target"
+    if [ ! -e "$dir" ]; then
+        echo "Creating \`$dir' directory. . ."
+        install -d "$dir"
     fi
 
     # Create commit.
@@ -329,7 +327,7 @@ dotfiler_init () {
             git commit -m 'Initial commit'
         else
             echo 'Committing new mount point. . .'
-            git commit -m "Add \`$relative_target' mount point"
+            git commit -m "Add \`$dir' mount point"
         fi
     fi
 
@@ -349,7 +347,7 @@ dotfiler_init () {
             set -- "$@" --fstab
         fi
 
-        dotfiler_mount "$@" "$target"
+        dotfiler_mount "$@" "$dir"
     fi
 }
 

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replace `mkdir -p` with a more portable command
 - Refactor parsing arguments
+- `init` takes two optional arguments `REPO_ROOT` and `DIR`
 
 ### Removed
 

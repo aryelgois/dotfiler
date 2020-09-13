@@ -67,7 +67,9 @@ a man page will be generated for you.
 
 ## Using
 
-Initialize a new repository with `dotfiler init`,
+Initialize a new repository
+in the current directory
+with `dotfiler init`,
 or clone an existing one
 and run this command inside of it.
 
@@ -96,8 +98,10 @@ with a basic `README` and `.gitignore`,
 to already mounting your `$HOME`,
 if you wish.
 
-By default,
-Dotfiler creates a `home` directory,
+Dotfiler creates a git repository
+at `REPO_ROOT`
+(defaults to the current directory, or `.`)
+and adds a `home` directory,
 but you can pass a different `DIR` to use,
 which doesn't even need to be at the repository root.
 You may call this command
